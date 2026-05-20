@@ -11,8 +11,26 @@
 <body>
   <main class="app">
     <section class="hero">
-      <h1>Weather Dashboard</h1>
-      <p>Search any city or location worldwide and view current weather plus a 5-day forecast.</p>
+      <div class="top-bar">
+        <div>
+          <p class="eyebrow">Real-Time Weather App</p>
+          <h1>Weather Dashboard</h1>
+          <p>Search any city or location worldwide and view current weather plus a 5-day forecast.</p>
+        </div>
+
+        <div class="theme-control">
+          <label for="themeSelect">Theme</label>
+          <select id="themeSelect">
+            <option value="glass">Glass Storm</option>
+            <option value="cyber">Cyber Terminal</option>
+            <option value="apple">Apple Clean</option>
+            <option value="mood">Weather Mood</option>
+            <option value="passport">Travel Passport</option>
+            <option value="luxury">Black Luxury</option>
+            <option value="nature">Nature Calm</option>
+          </select>
+        </div>
+      </div>
 
       <form id="searchForm" class="search-form">
         <div class="input-wrapper">
