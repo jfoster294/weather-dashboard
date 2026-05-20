@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+  <title>Weather Dashboard | Joel Foster</title>
+
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <main class="app">
+    <section class="hero">
+      <h1>Weather Dashboard</h1>
+      <p>Search any city worldwide and view current weather plus a 5-day forecast.</p>
+
+      <form id="searchForm" class="search-form">
+        <input 
+          type="text" 
+          id="cityInput" 
+          placeholder="Search city, example: Phoenix" 
+          autocomplete="off"
+        />
+        <button type="submit">Search</button>
+      </form>
+
+      <p id="message" class="message"></p>
+    </section>
+
+    <section id="weatherCard" class="weather-card hidden">
+      <div>
+        <h2 id="cityName"></h2>
+        <p id="condition"></p>
+      </div>
+
+      <div class="temperature">
+        <span id="temperature"></span>
+      </div>
+
+      <div class="weather-details">
+        <p><strong>Feels Like:</strong> <span id="feelsLike"></span></p>
+        <p><strong>Humidity:</strong> <span id="humidity"></span></p>
+        <p><strong>Wind:</strong> <span id="wind"></span></p>
+      </div>
+    </section>
+
+    <section id="forecastSection" class="forecast-section hidden">
+      <h2>5-Day Forecast</h2>
+      <div id="forecastGrid" class="forecast-grid"></div>
+    </section>
+  </main>
+
+  <script src="script.js"></script>
+</body>
+</html>
