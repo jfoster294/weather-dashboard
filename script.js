@@ -2,6 +2,7 @@ const searchForm = document.getElementById("searchForm");
 const cityInput = document.getElementById("cityInput");
 const message = document.getElementById("message");
 const suggestions = document.getElementById("suggestions");
+const themeSelect = document.getElementById("themeSelect");
 
 const weatherCard = document.getElementById("weatherCard");
 const cityName = document.getElementById("cityName");
@@ -16,6 +17,26 @@ const forecastGrid = document.getElementById("forecastGrid");
 
 let typingTimer;
 let selectedLocation = null;
+let currentWeatherCode = null;
+
+const themeClasses = [
+  "theme-glass",
+  "theme-cyber",
+  "theme-apple",
+  "theme-mood",
+  "theme-passport",
+  "theme-luxury",
+  "theme-nature"
+];
+
+const moodClasses = [
+  "mood-clear",
+  "mood-cloudy",
+  "mood-rain",
+  "mood-snow",
+  "mood-storm",
+  "mood-fog"
+];
 
 const weatherCodes = {
   0: { text: "Clear Sky", icon: "☀️" },
@@ -38,6 +59,10 @@ const weatherCodes = {
   82: { text: "Heavy Showers", icon: "⛈️" },
   95: { text: "Thunderstorm", icon: "⛈️" }
 };
+
+themeSelect.addEventListener("change", function () {
+  applyTheme(themeSelect.value);
+});
 
 cityInput.addEventListener("input", function () {
   clearTimeout(typingTimer);
@@ -79,6 +104,40 @@ document.addEventListener("click", function (event) {
     hideSuggestions();
   }
 });
+
+function applyTheme(theme) {
+  document.body.classList.remove(...themeClasses);
+  document.body.classList.remove(...moodClasses);
+
+  document.body.classList.add(`theme-${theme}`);
+  localStorage.setItem("selectedTheme", theme);
+
+  if (theme === "mood" && currentWeatherCode !== null) {
+    applyWeatherMood(currentWeatherCode);
+  }
+}
+
+function applyWeatherMood(weatherCode) {
+  document.body.classList.remove(...moodClasses);
+
+  if (weatherCode === 0 || weatherCode === 1) {
+    document.body.classList.add("mood-clear");
+  } else if (weatherCode === 2 || weatherCode === 3) {
+    document.body.classList.add("mood-cloudy");
+  } else if (weatherCode === 45 || weatherCode === 48) {
+    document.body.classList.add("mood-fog");
+  } else if (weatherCode >= 51 && weatherCode <= 65) {
+    document.body.classList.add("mood-rain");
+  } else if (weatherCode >= 71 && weatherCode <= 75) {
+    document.body.classList.add("mood-snow");
+  } else if (weatherCode >= 80 && weatherCode <= 82) {
+    document.body.classList.add("mood-rain");
+  } else if (weatherCode === 95) {
+    document.body.classList.add("mood-storm");
+  } else {
+    document.body.classList.add("mood-cloudy");
+  }
+}
 
 async function getLocationSuggestions(searchText) {
   try {
@@ -205,6 +264,12 @@ function displayCurrentWeather(location, weather) {
     icon: "🌡️"
   };
 
+  currentWeatherCode = current.weather_code;
+
+  if (themeSelect.value === "mood") {
+    applyWeatherMood(currentWeatherCode);
+  }
+
   cityName.textContent = getLocationLabel(location);
   condition.textContent = `${currentCode.icon} ${currentCode.text}`;
   temperature.textContent = `${Math.round(current.temperature_2m)}°F`;
@@ -255,6 +320,10 @@ function formatDate(dateString) {
 function showMessage(text) {
   message.textContent = text;
 }
+
+const savedTheme = localStorage.getItem("selectedTheme") || "glass";
+themeSelect.value = savedTheme;
+applyTheme(savedTheme);
 
 const savedLocation = localStorage.getItem("lastLocation");
 
