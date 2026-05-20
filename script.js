@@ -1,6 +1,7 @@
 const searchForm = document.getElementById("searchForm");
 const cityInput = document.getElementById("cityInput");
 const message = document.getElementById("message");
+const suggestions = document.getElementById("suggestions");
 
 const weatherCard = document.getElementById("weatherCard");
 const cityName = document.getElementById("cityName");
@@ -12,6 +13,9 @@ const wind = document.getElementById("wind");
 
 const forecastSection = document.getElementById("forecastSection");
 const forecastGrid = document.getElementById("forecastGrid");
+
+let typingTimer;
+let selectedLocation = null;
 
 const weatherCodes = {
   0: { text: "Clear Sky", icon: "☀️" },
@@ -35,47 +39,148 @@ const weatherCodes = {
   95: { text: "Thunderstorm", icon: "⛈️" }
 };
 
-searchForm.addEventListener("submit", function (event) {
-  event.preventDefault();
+cityInput.addEventListener("input", function () {
+  clearTimeout(typingTimer);
+  selectedLocation = null;
 
-  const city = cityInput.value.trim();
+  const searchText = cityInput.value.trim();
 
-  if (city === "") {
-    showMessage("Please enter a city name.");
+  if (searchText.length < 2) {
+    hideSuggestions();
     return;
   }
 
-  getWeather(city);
+  typingTimer = setTimeout(function () {
+    getLocationSuggestions(searchText);
+  }, 300);
 });
 
-async function getWeather(city) {
+searchForm.addEventListener("submit", function (event) {
+  event.preventDefault();
+
+  const searchText = cityInput.value.trim();
+
+  if (searchText === "") {
+    showMessage("Please enter a city or location.");
+    return;
+  }
+
+  hideSuggestions();
+
+  if (selectedLocation) {
+    getWeatherByLocation(selectedLocation);
+  } else {
+    getWeatherBySearch(searchText);
+  }
+});
+
+document.addEventListener("click", function (event) {
+  if (!event.target.closest(".search-form")) {
+    hideSuggestions();
+  }
+});
+
+async function getLocationSuggestions(searchText) {
+  try {
+    const url = `https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(searchText)}&count=10&language=en&format=json`;
+
+    const response = await fetch(url);
+    const data = await response.json();
+
+    if (!data.results || data.results.length === 0) {
+      hideSuggestions();
+      return;
+    }
+
+    displaySuggestions(data.results);
+  } catch (error) {
+    hideSuggestions();
+  }
+}
+
+function displaySuggestions(locations) {
+  suggestions.innerHTML = "";
+
+  locations.forEach(function (location) {
+    const item = document.createElement("div");
+    item.className = "suggestion-item";
+
+    const name = document.createElement("div");
+    name.className = "suggestion-name";
+    name.textContent = location.name;
+
+    const place = document.createElement("div");
+    place.className = "suggestion-location";
+    place.textContent = getLocationLabel(location);
+
+    item.appendChild(name);
+    item.appendChild(place);
+
+    item.addEventListener("click", function () {
+      selectedLocation = location;
+      cityInput.value = getLocationLabel(location);
+      hideSuggestions();
+      getWeatherByLocation(location);
+    });
+
+    suggestions.appendChild(item);
+  });
+
+  suggestions.classList.remove("hidden");
+}
+
+function getLocationLabel(location) {
+  const region = location.admin1 ? `${location.admin1}, ` : "";
+  const country = location.country ? location.country : "";
+
+  return `${location.name}, ${region}${country}`;
+}
+
+function hideSuggestions() {
+  suggestions.innerHTML = "";
+  suggestions.classList.add("hidden");
+}
+
+async function getWeatherBySearch(searchText) {
   try {
     showMessage("Loading weather...");
     weatherCard.classList.add("hidden");
     forecastSection.classList.add("hidden");
 
-    const location = await getCityLocation(city);
-    const weather = await getWeatherData(location);
-
-    displayCurrentWeather(location, weather);
-    displayForecast(weather);
-
-    localStorage.setItem("lastCity", city);
-
-    showMessage("");
+    const location = await getCityLocation(searchText);
+    await getWeatherByLocation(location);
   } catch (error) {
     showMessage(error.message);
   }
 }
 
-async function getCityLocation(city) {
-  const url = `https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(city)}&count=1&language=en&format=json`;
+async function getWeatherByLocation(location) {
+  try {
+    showMessage("Loading weather...");
+    weatherCard.classList.add("hidden");
+    forecastSection.classList.add("hidden");
+
+    const weather = await getWeatherData(location);
+
+    displayCurrentWeather(location, weather);
+    displayForecast(weather);
+
+    localStorage.setItem("lastLocation", JSON.stringify(location));
+
+    showMessage("");
+  } catch (error) {
+    showMessage("Weather data could not be loaded.");
+  }
+}
+
+async function getCityLocation(searchText) {
+  const url = `https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(searchText)}&count=1&language=en&format=json`;
 
   const response = await fetch(url);
   const data = await response.json();
 
   if (!data.results || data.results.length === 0) {
-    throw new Error("City not found. Try another city.");
+    throw new Error("Location not found. Try another search.");
   }
 
   return data.results[0];
@@ -100,7 +205,7 @@ function displayCurrentWeather(location, weather) {
     icon: "🌡️"
   };
 
-  cityName.textContent = `${location.name}, ${location.country}`;
+  cityName.textContent = getLocationLabel(location);
   condition.textContent = `${currentCode.icon} ${currentCode.text}`;
   temperature.textContent = `${Math.round(current.temperature_2m)}°F`;
   feelsLike.textContent = `${Math.round(current.apparent_temperature)}°F`;
@@ -138,7 +243,7 @@ function displayForecast(weather) {
 }
 
 function formatDate(dateString) {
-  const date = new Date(dateString);
+  const date = new Date(`${dateString}T00:00:00`);
 
   return date.toLocaleDateString("en-US", {
     weekday: "short",
@@ -151,9 +256,14 @@ function showMessage(text) {
   message.textContent = text;
 }
 
-const lastCity = localStorage.getItem("lastCity");
+const savedLocation = localStorage.getItem("lastLocation");
 
-if (lastCity) {
-  cityInput.value = lastCity;
-  getWeather(lastCity);
+if (savedLocation) {
+  try {
+    const location = JSON.parse(savedLocation);
+    cityInput.value = getLocationLabel(location);
+    getWeatherByLocation(location);
+  } catch (error) {
+    localStorage.removeItem("lastLocation");
+  }
 }
