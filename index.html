@@ -12,15 +12,20 @@
   <main class="app">
     <section class="hero">
       <h1>Weather Dashboard</h1>
-      <p>Search any city worldwide and view current weather plus a 5-day forecast.</p>
+      <p>Search any city or location worldwide and view current weather plus a 5-day forecast.</p>
 
       <form id="searchForm" class="search-form">
-        <input 
-          type="text" 
-          id="cityInput" 
-          placeholder="Search city, example: Phoenix" 
-          autocomplete="off"
-        />
+        <div class="input-wrapper">
+          <input 
+            type="text" 
+            id="cityInput" 
+            placeholder="Search city or location, example: Phoenix" 
+            autocomplete="off"
+          />
+
+          <div id="suggestions" class="suggestions hidden"></div>
+        </div>
+
         <button type="submit">Search</button>
       </form>
 
