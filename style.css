@@ -41,6 +41,11 @@ body {
   margin: 0 auto;
 }
 
+.input-wrapper {
+  position: relative;
+  width: 100%;
+}
+
 .search-form input {
   width: 100%;
   padding: 14px;
@@ -61,6 +66,41 @@ body {
 
 .search-form button:hover {
   background: #fde047;
+}
+
+.suggestions {
+  position: absolute;
+  top: 54px;
+  left: 0;
+  right: 0;
+  background: #ffffff;
+  color: #111827;
+  border-radius: 12px;
+  overflow: hidden;
+  z-index: 10;
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.25);
+  text-align: left;
+  max-height: 280px;
+  overflow-y: auto;
+}
+
+.suggestion-item {
+  padding: 12px 14px;
+  cursor: pointer;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.suggestion-item:hover {
+  background: #f3f4f6;
+}
+
+.suggestion-name {
+  font-weight: bold;
+}
+
+.suggestion-location {
+  font-size: 0.85rem;
+  color: #6b7280;
 }
 
 .message {
