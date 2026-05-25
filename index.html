@@ -9,67 +9,142 @@
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
-  <main class="app">
-    <section class="hero">
-      <div class="top-bar">
+  <main class="weather-app">
+    <aside class="sidebar">
+      <div class="brand">
+        <div class="brand-icon">☁</div>
         <div>
-          <p class="eyebrow">Real Time Weather App</p>
-          <h1>Weather Dashboard</h1>
-          <p>Search any city or location worldwide and view current weather plus a 5 day forecast</p>
-        </div>
-
-        <div class="theme-control">
-          <label for="themeSelect">Theme</label>
-          <select id="themeSelect">
-            <option value="glass">Glass Storm</option>
-            <option value="cyber">Cyber Terminal</option>
-            <option value="apple">Apple Clean</option>
-            <option value="mood">Weather Mood</option>
-            <option value="passport">Travel Passport</option>
-            <option value="luxury">Black Luxury</option>
-            <option value="nature">Nature Calm</option>
-          </select>
+          <h1>Neo Weather</h1>
+          <p>Station v2.5.1</p>
         </div>
       </div>
 
-      <form id="searchForm" class="search-form">
-        <div class="input-wrapper">
-          <input 
-            type="text" 
-            id="cityInput" 
-            placeholder="Search city or location, example: Phoenix" 
-            autocomplete="off"
-          />
+      <nav class="side-nav">
+        <button class="side-link active" type="button">Dashboard</button>
+        <button class="side-link" type="button">Forecast</button>
+        <button class="side-link" type="button">Alerts</button>
+        <button class="side-link" type="button">Settings</button>
+      </nav>
 
-          <div id="suggestions" class="suggestions hidden"></div>
+      <section class="saved-panel">
+        <div class="saved-header">
+          <h2>Recent Cities</h2>
+          <button id="clearRecentButton" type="button">Clear</button>
         </div>
 
-        <button type="submit">Search</button>
-      </form>
+        <div id="recentCities" class="recent-cities"></div>
+      </section>
 
-      <p id="message" class="message"></p>
-    </section>
+      <section class="status-panel">
+        <p>DATA STATUS</p>
+        <strong id="systemStatus">LIVE</strong>
+      </section>
+    </aside>
 
-    <section id="weatherCard" class="weather-card hidden">
-      <div>
-        <h2 id="cityName"></h2>
-        <p id="condition"></p>
-      </div>
+    <section class="dashboard">
+      <header class="top-bar">
+        <a href="https://jfoster294.github.io/portfolio-site/" class="portfolio-link">← Portfolio</a>
 
-      <div class="temperature">
-        <span id="temperature"></span>
-      </div>
+        <form id="searchForm" class="search-form">
+          <input type="text" id="cityInput" placeholder="Search city or airport..." />
+          <button type="submit">Search</button>
+        </form>
 
-      <div class="weather-details">
-        <p><strong>Feels Like:</strong> <span id="feelsLike"></span></p>
-        <p><strong>Humidity:</strong> <span id="humidity"></span></p>
-        <p><strong>Wind:</strong> <span id="wind"></span></p>
-      </div>
-    </section>
+        <button id="localWeatherButton" class="local-button" type="button">Use Local Weather</button>
+      </header>
 
-    <section id="forecastSection" class="forecast-section hidden">
-      <h2>5 Day Forecast</h2>
-      <div id="forecastGrid" class="forecast-grid"></div>
+      <section class="hero-panel">
+        <div class="hero-copy">
+          <p class="section-tag">Current Weather</p>
+
+          <h2 id="cityName">Loading local weather...</h2>
+          <p id="cityCoords" class="coords">Waiting for location permission</p>
+
+          <div class="temperature-row">
+            <span id="temperature">--°</span>
+            <div>
+              <p id="conditionText">Loading...</p>
+              <small id="feelsLike">Feels like --°</small>
+            </div>
+          </div>
+
+          <div class="high-low-box">
+            <div>
+              <small>High</small>
+              <strong id="highTemp">--°</strong>
+            </div>
+
+            <div>
+              <small>Low</small>
+              <strong id="lowTemp">--°</strong>
+            </div>
+          </div>
+        </div>
+
+        <div class="weather-visual">
+          <div id="weatherIcon" class="weather-icon">⛈</div>
+          <div class="rain-lines">
+            <span></span>
+            <span></span>
+            <span></span>
+            <span></span>
+            <span></span>
+          </div>
+        </div>
+      </section>
+
+      <section class="metrics-grid">
+        <article class="metric-card">
+          <div class="metric-icon">💧</div>
+          <div>
+            <p>Humidity</p>
+            <h3 id="humidity">--%</h3>
+          </div>
+          <div class="sparkline"></div>
+        </article>
+
+        <article class="metric-card">
+          <div class="metric-icon">〰</div>
+          <div>
+            <p>Wind</p>
+            <h3 id="windSpeed">-- mph</h3>
+          </div>
+          <div class="sparkline"></div>
+        </article>
+
+        <article class="metric-card">
+          <div class="metric-icon">◉</div>
+          <div>
+            <p>Pressure</p>
+            <h3 id="pressure">-- hPa</h3>
+          </div>
+          <div class="sparkline"></div>
+        </article>
+
+        <article class="metric-card">
+          <div class="metric-icon">◎</div>
+          <div>
+            <p>Visibility</p>
+            <h3 id="visibility">-- mi</h3>
+          </div>
+          <div class="sparkline"></div>
+        </article>
+      </section>
+
+      <section class="forecast-panel">
+        <div class="panel-heading">
+          <div>
+            <p class="section-tag">5-Day Forecast</p>
+            <h2>Upcoming Conditions</h2>
+          </div>
+
+          <p id="updatedTime">Data updated: --</p>
+        </div>
+
+        <div id="forecastGrid" class="forecast-grid"></div>
+      </section>
+
+      <section id="messageBox" class="message-box hidden"></section>
     </section>
   </main>
 
