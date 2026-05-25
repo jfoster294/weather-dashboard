@@ -220,6 +220,7 @@ body::after {
 .dashboard {
   display: grid;
   gap: 20px;
+  position: relative;
 }
 
 .top-bar {
@@ -229,6 +230,9 @@ body::after {
   grid-template-columns: auto 1fr auto;
   gap: 16px;
   align-items: center;
+  position: relative;
+  z-index: 100;
+  overflow: visible;
 }
 
 .portfolio-link {
@@ -243,11 +247,14 @@ body::after {
   border-radius: 999px;
   background: rgba(255,255,255,0.04);
   position: relative;
+  z-index: 200;
+  overflow: visible;
 }
 
 .search-field {
   position: relative;
   flex: 1;
+  z-index: 300;
 }
 
 .search-form input {
@@ -290,12 +297,12 @@ body::after {
   display: none;
   border: 1px solid var(--border);
   border-radius: 16px;
-  background: rgba(2, 9, 20, 0.97);
+  background: rgba(2, 9, 20, 0.98);
   box-shadow:
-    0 20px 45px rgba(0, 0, 0, 0.55),
+    0 20px 45px rgba(0, 0, 0, 0.75),
     0 0 25px var(--cyan-soft);
   overflow: hidden;
-  z-index: 50;
+  z-index: 9999;
 }
 
 .city-suggestions.show {
@@ -335,6 +342,7 @@ body::after {
   grid-template-columns: 1fr 0.8fr;
   gap: 30px;
   align-items: center;
+  z-index: 1;
 }
 
 .hero-panel::before {
