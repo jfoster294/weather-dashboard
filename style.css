@@ -17,6 +17,7 @@ body {
   --border: rgba(35, 215, 255, 0.28);
   --danger: #fb7185;
   --green: #38f27b;
+  --hero-image: none;
 
   min-height: 100vh;
   font-family: Arial, sans-serif;
@@ -193,6 +194,12 @@ body::after {
   border-color: var(--cyan);
 }
 
+.empty-recent {
+  color: var(--muted);
+  line-height: 1.5;
+  font-size: 0.9rem;
+}
+
 .status-panel {
   border: 1px solid var(--border);
   border-radius: 16px;
@@ -234,12 +241,17 @@ body::after {
   display: flex;
   border: 1px solid var(--border);
   border-radius: 999px;
-  overflow: hidden;
   background: rgba(255,255,255,0.04);
+  position: relative;
+}
+
+.search-field {
+  position: relative;
+  flex: 1;
 }
 
 .search-form input {
-  flex: 1;
+  width: 100%;
   border: none;
   background: transparent;
   color: var(--text);
@@ -262,8 +274,55 @@ body::after {
   cursor: pointer;
 }
 
+.search-form button {
+  border-radius: 0 999px 999px 0;
+}
+
 .local-button {
   border-radius: 999px;
+}
+
+.city-suggestions {
+  position: absolute;
+  top: calc(100% + 10px);
+  left: 0;
+  right: 0;
+  display: none;
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  background: rgba(2, 9, 20, 0.97);
+  box-shadow:
+    0 20px 45px rgba(0, 0, 0, 0.55),
+    0 0 25px var(--cyan-soft);
+  overflow: hidden;
+  z-index: 50;
+}
+
+.city-suggestions.show {
+  display: block;
+}
+
+.city-suggestion {
+  width: 100%;
+  border: none;
+  border-bottom: 1px solid rgba(35, 215, 255, 0.12);
+  background: transparent;
+  color: var(--text);
+  padding: 14px 16px;
+  text-align: left;
+  cursor: pointer;
+  font-size: 0.95rem;
+}
+
+.city-suggestion:hover {
+  background: rgba(35, 215, 255, 0.1);
+  color: var(--cyan);
+}
+
+.city-suggestion small {
+  display: block;
+  color: var(--muted);
+  margin-top: 4px;
 }
 
 .hero-panel {
@@ -282,13 +341,22 @@ body::after {
   content: "";
   position: absolute;
   inset: 0;
-  background:
-    linear-gradient(90deg, rgba(2,7,18,0.92), rgba(2,7,18,0.56)),
-    url("https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?auto=format&fit=crop&w=1600&q=80");
+  background-image:
+    linear-gradient(90deg, rgba(2,7,18,0.94), rgba(2,7,18,0.58)),
+    radial-gradient(circle at top right, rgba(35, 215, 255, 0.18), transparent 32%),
+    radial-gradient(circle at bottom left, rgba(217, 70, 239, 0.14), transparent 35%);
   background-size: cover;
   background-position: center;
-  opacity: 0.45;
-  z-index: -1;
+  opacity: 1;
+  z-index: -2;
+}
+
+body.location-photo-active .hero-panel::before {
+  background-image:
+    linear-gradient(90deg, rgba(2,7,18,0.92), rgba(2,7,18,0.46)),
+    var(--hero-image);
+  background-size: cover, cover;
+  background-position: center, center;
 }
 
 .hero-panel::after {
@@ -298,6 +366,7 @@ body::after {
   border: 1px solid rgba(217, 70, 239, 0.22);
   border-radius: 24px;
   pointer-events: none;
+  z-index: -1;
 }
 
 .section-tag {
@@ -404,10 +473,21 @@ body::after {
   animation: rain 1.3s linear infinite;
 }
 
-.rain-lines span:nth-child(2) { animation-delay: 0.2s; }
-.rain-lines span:nth-child(3) { animation-delay: 0.4s; }
-.rain-lines span:nth-child(4) { animation-delay: 0.6s; }
-.rain-lines span:nth-child(5) { animation-delay: 0.8s; }
+.rain-lines span:nth-child(2) {
+  animation-delay: 0.2s;
+}
+
+.rain-lines span:nth-child(3) {
+  animation-delay: 0.4s;
+}
+
+.rain-lines span:nth-child(4) {
+  animation-delay: 0.6s;
+}
+
+.rain-lines span:nth-child(5) {
+  animation-delay: 0.8s;
+}
 
 @keyframes rain {
   from {
@@ -419,6 +499,21 @@ body::after {
     transform: translateY(25px) rotate(15deg);
     opacity: 0.7;
   }
+}
+
+.background-credit {
+  position: absolute;
+  left: 24px;
+  bottom: 18px;
+  max-width: 85%;
+  color: rgba(245, 251, 255, 0.72);
+  font-size: 0.8rem;
+  z-index: 2;
+}
+
+.background-credit a {
+  color: var(--cyan);
+  text-decoration: none;
 }
 
 .metrics-grid {
@@ -578,10 +673,12 @@ body::after {
 
   .search-form {
     border-radius: 18px;
+    flex-direction: column;
   }
 
   .search-form button {
-    padding: 12px;
+    border-radius: 0 0 18px 18px;
+    padding: 14px;
   }
 
   .side-nav,
