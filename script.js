@@ -1,5 +1,8 @@
+const UNSPLASH_ACCESS_KEY = "PASTE_YOUR_UNSPLASH_ACCESS_KEY_HERE";
+
 const searchForm = document.getElementById("searchForm");
 const cityInput = document.getElementById("cityInput");
+const citySuggestions = document.getElementById("citySuggestions");
 const localWeatherButton = document.getElementById("localWeatherButton");
 const clearRecentButton = document.getElementById("clearRecentButton");
 
@@ -22,8 +25,11 @@ const updatedTime = document.getElementById("updatedTime");
 const messageBox = document.getElementById("messageBox");
 const recentCities = document.getElementById("recentCities");
 const systemStatus = document.getElementById("systemStatus");
+const backgroundCredit = document.getElementById("backgroundCredit");
 
 let recentSearches = JSON.parse(localStorage.getItem("recentWeatherCities")) || [];
+let suggestionResults = [];
+let suggestionTimer;
 
 document.addEventListener("DOMContentLoaded", function () {
   renderRecentCities();
@@ -40,7 +46,29 @@ searchForm.addEventListener("submit", function (event) {
     return;
   }
 
+  hideSuggestions();
   searchCity(city);
+});
+
+cityInput.addEventListener("input", function () {
+  const city = cityInput.value.trim();
+
+  clearTimeout(suggestionTimer);
+
+  if (city.length < 2) {
+    hideSuggestions();
+    return;
+  }
+
+  suggestionTimer = setTimeout(function () {
+    getCitySuggestions(city);
+  }, 250);
+});
+
+document.addEventListener("click", function (event) {
+  if (!searchForm.contains(event.target)) {
+    hideSuggestions();
+  }
 });
 
 localWeatherButton.addEventListener("click", function () {
@@ -55,6 +83,7 @@ clearRecentButton.addEventListener("click", function () {
 
 function loadLocalWeather() {
   hideMessage();
+  hideSuggestions();
   systemStatus.textContent = "LOCATING";
 
   if (!navigator.geolocation) {
@@ -68,7 +97,12 @@ function loadLocalWeather() {
       const latitude = position.coords.latitude;
       const longitude = position.coords.longitude;
 
-      fetchWeather(latitude, longitude, "Local Weather", "Current GPS position");
+      fetchWeather(
+        latitude,
+        longitude,
+        "Local Weather",
+        `${latitude.toFixed(2)}°, ${longitude.toFixed(2)}°`
+      );
     },
     function () {
       showMessage("Location permission was blocked. Loading Phoenix, Arizona instead.");
@@ -82,7 +116,12 @@ function loadLocalWeather() {
 }
 
 function loadDefaultCity() {
-  fetchWeather(33.4484, -112.074, "Phoenix, Arizona", "33.4484° N, 112.0740° W");
+  fetchWeather(
+    33.4484,
+    -112.0740,
+    "Phoenix, Arizona",
+    "33.45°, -112.07°"
+  );
 }
 
 async function searchCity(city) {
@@ -101,17 +140,72 @@ async function searchCity(city) {
     }
 
     const result = geoData.results[0];
-    const displayName = `${result.name}${result.admin1 ? ", " + result.admin1 : ""}`;
+    const displayName = formatCityName(result);
     const coordsText = `${result.latitude.toFixed(2)}°, ${result.longitude.toFixed(2)}°`;
 
     saveRecentCity(displayName);
-
     fetchWeather(result.latitude, result.longitude, displayName, coordsText);
+
     cityInput.value = "";
   } catch (error) {
     showMessage("Something went wrong while searching. Try again.");
     systemStatus.textContent = "ERROR";
   }
+}
+
+async function getCitySuggestions(city) {
+  try {
+    const geoUrl = `https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(city)}&count=5&language=en&format=json`;
+    const response = await fetch(geoUrl);
+    const data = await response.json();
+
+    if (!data.results || data.results.length === 0) {
+      hideSuggestions();
+      return;
+    }
+
+    suggestionResults = data.results;
+    renderSuggestions();
+  } catch (error) {
+    hideSuggestions();
+  }
+}
+
+function renderSuggestions() {
+  citySuggestions.innerHTML = "";
+
+  suggestionResults.forEach(function (city) {
+    const button = document.createElement("button");
+    button.className = "city-suggestion";
+    button.type = "button";
+
+    const cityLabel = formatCityName(city);
+    const countryLabel = city.country || "Unknown country";
+
+    button.innerHTML = `
+      ${escapeHTML(cityLabel)}
+      <small>${escapeHTML(countryLabel)}</small>
+    `;
+
+    button.addEventListener("click", function () {
+      const coordsText = `${city.latitude.toFixed(2)}°, ${city.longitude.toFixed(2)}°`;
+
+      cityInput.value = "";
+      hideSuggestions();
+
+      saveRecentCity(cityLabel);
+      fetchWeather(city.latitude, city.longitude, cityLabel, coordsText);
+    });
+
+    citySuggestions.appendChild(button);
+  });
+
+  citySuggestions.classList.add("show");
+}
+
+function hideSuggestions() {
+  citySuggestions.classList.remove("show");
+  citySuggestions.innerHTML = "";
 }
 
 async function fetchWeather(latitude, longitude, displayName, coordsText) {
@@ -127,8 +221,11 @@ async function fetchWeather(latitude, longitude, displayName, coordsText) {
     const response = await fetch(weatherUrl);
     const data = await response.json();
 
-    updateCurrentWeather(data, displayName, coordsText);
+    const weatherInfo = getWeatherInfo(data.current.weather_code);
+
+    updateCurrentWeather(data, displayName, coordsText, weatherInfo);
     updateForecast(data);
+    updateLocationBackground(displayName, weatherInfo.label);
     hideMessage();
 
     systemStatus.textContent = "LIVE";
@@ -138,11 +235,9 @@ async function fetchWeather(latitude, longitude, displayName, coordsText) {
   }
 }
 
-function updateCurrentWeather(data, displayName, coordsText) {
+function updateCurrentWeather(data, displayName, coordsText, weatherInfo) {
   const current = data.current;
   const daily = data.daily;
-
-  const weatherInfo = getWeatherInfo(current.weather_code);
 
   cityName.textContent = displayName;
   cityCoords.textContent = coordsText;
@@ -164,6 +259,7 @@ function updateCurrentWeather(data, displayName, coordsText) {
   visibility.textContent = `${miles.toFixed(1)} mi`;
 
   const time = new Date(current.time);
+
   updatedTime.textContent = `Data updated: ${time.toLocaleTimeString([], {
     hour: "2-digit",
     minute: "2-digit"
@@ -194,6 +290,78 @@ function updateForecast(data) {
   }
 }
 
+async function updateLocationBackground(displayName, weatherLabel) {
+  const hasUnsplashKey =
+    UNSPLASH_ACCESS_KEY &&
+    !UNSPLASH_ACCESS_KEY.includes("PASTE") &&
+    UNSPLASH_ACCESS_KEY.length > 10;
+
+  if (!hasUnsplashKey) {
+    useFallbackBackground();
+    return;
+  }
+
+  try {
+    const backgroundQuery = getBackgroundQuery(displayName, weatherLabel);
+
+    const imageUrl =
+      `https://api.unsplash.com/search/photos?query=${encodeURIComponent(backgroundQuery)}` +
+      `&orientation=landscape&per_page=1&content_filter=high&client_id=${UNSPLASH_ACCESS_KEY}`;
+
+    const response = await fetch(imageUrl);
+
+    if (!response.ok) {
+      useFallbackBackground();
+      return;
+    }
+
+    const data = await response.json();
+
+    if (!data.results || data.results.length === 0) {
+      useFallbackBackground();
+      return;
+    }
+
+    const photo = data.results[0];
+    const photoUrl = photo.urls.regular;
+    const photographerName = photo.user.name;
+    const photographerUrl = `${photo.user.links.html}?utm_source=joel_weather_dashboard&utm_medium=referral`;
+    const unsplashUrl = `https://unsplash.com/?utm_source=joel_weather_dashboard&utm_medium=referral`;
+
+    document.body.style.setProperty("--hero-image", `url("${photoUrl}")`);
+    document.body.classList.add("location-photo-active");
+
+    backgroundCredit.innerHTML = `
+      Photo by
+      <a href="${photographerUrl}" target="_blank" rel="noopener noreferrer">${escapeHTML(photographerName)}</a>
+      on
+      <a href="${unsplashUrl}" target="_blank" rel="noopener noreferrer">Unsplash</a>
+    `;
+
+    backgroundCredit.classList.remove("hidden");
+  } catch (error) {
+    useFallbackBackground();
+  }
+}
+
+function getBackgroundQuery(displayName, weatherLabel) {
+  if (displayName.toLowerCase().includes("local weather")) {
+    return `${weatherLabel} weather landscape`;
+  }
+
+  const cityOnly = displayName.split(",")[0].trim();
+
+  return `${cityOnly} city skyline`;
+}
+
+function useFallbackBackground() {
+  document.body.classList.remove("location-photo-active");
+  document.body.style.setProperty("--hero-image", "none");
+
+  backgroundCredit.textContent = "";
+  backgroundCredit.classList.add("hidden");
+}
+
 function getWeatherInfo(code) {
   const weatherMap = {
     0: { label: "Clear Sky", icon: "☀️" },
@@ -220,6 +388,10 @@ function getWeatherInfo(code) {
   };
 
   return weatherMap[code] || { label: "Weather Data", icon: "☁️" };
+}
+
+function formatCityName(city) {
+  return `${city.name}${city.admin1 ? ", " + city.admin1 : ""}`;
 }
 
 function saveRecentCity(city) {
@@ -264,4 +436,11 @@ function showMessage(message) {
 function hideMessage() {
   messageBox.textContent = "";
   messageBox.classList.add("hidden");
+}
+
+function escapeHTML(text) {
+  return String(text)
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;");
 }
